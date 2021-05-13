@@ -31,7 +31,7 @@ classdef ControlSystem < handle
             end
         end
         
-        function thrust = calculate(obj, y, t, v)
+        function thrust = calculate(obj, y, t)
             wpt = obj.updateCurWpt(t);
             
             v_req = (obj.waypoints.Data(wpt) - y) / (obj.waypoints.Time(wpt) - t);
@@ -42,8 +42,6 @@ classdef ControlSystem < handle
             else
                 v_cur = 0;
             end
-            
-            v_cur = v;
             
             obj.y_prev = y;
             obj.t_prev = t;
