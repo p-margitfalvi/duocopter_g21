@@ -1,0 +1,49 @@
+classdef ControlSystem < handle
+    properties
+        gains;
+        waypoints;
+        cur_waypoint_idx;
+        y_prev;
+        t_prev;
+        firstIter;
+    end
+    methods
+        
+        function obj = ControlSystem(gains, waypoints)
+            obj.gains = gains;
+            obj.waypoints = waypoints;
+            
+            obj.cur_waypoint_idx = 1;
+            obj.y_prev = -1;
+            obj.t_prev = -1;
+            
+            obj.firstIter = true;
+        end
+        
+        function cur_waypoint_idx = updateCurWpt(obj, t)
+            if obj.waypoints.Time(obj.cur_waypoint_idx) > t
+                cur_waypoint_idx = min(obj.cur_waypoint_idx + 1, numel(obj.waypoints.Time));
+                obj.cur_waypoint_idx = cur_waypoint_idx;
+            end
+        end
+        
+        function thrust = calculate(obj, y, t)
+            wpt = obj.updateCurWpt(t);
+            
+            v_req = (obj.waypoints.Data(wpt) - y) / (obj.waypoints.Time(wpt) - t);
+            
+            if ~obj.firstIter
+                obj.firstIter = false;
+                v_cur = (y - obj.y_prev)/(t - obj.t_prev); % TODO: Use more points for smoother derivative
+            else
+            
+            
+            obj.y_prev = y;
+            obj.t_prev = t;
+            
+            err = v_cur - v_req;
+            
+            thrust = obj.gains.P * err; 
+        end
+    end
+end
