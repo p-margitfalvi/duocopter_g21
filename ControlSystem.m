@@ -2,10 +2,13 @@ classdef ControlSystem < handle
     properties
         gains;
         waypoints;
-        cur_waypoint_idx;
-        y_prev;
-        t_prev;
-        firstIter;
+        cur_waypoint_idx = 1;
+        y_prev = -1;
+        t_prev = -1;
+        firstIter = true;
+        
+        err_accum = 0;
+        err_prev = 0;
         
         logs;
     end
@@ -14,18 +17,13 @@ classdef ControlSystem < handle
         function obj = ControlSystem(gains, waypoints)
             obj.gains = gains;
             obj.waypoints = waypoints;
-            
-            obj.cur_waypoint_idx = 1;
-            obj.y_prev = -1;
-            obj.t_prev = -1;
-            
-            obj.firstIter = true;
         end
         
         function cur_waypoint_idx = updateCurWpt(obj, t)
             if obj.waypoints.Time(obj.cur_waypoint_idx) <= t
                 cur_waypoint_idx = min(obj.cur_waypoint_idx + 1, numel(obj.waypoints.Time));
                 obj.cur_waypoint_idx = cur_waypoint_idx;
+                obj.reset()
             else
                 cur_waypoint_idx = obj.cur_waypoint_idx;
             end
@@ -34,6 +32,7 @@ classdef ControlSystem < handle
         function thrust = calculate(obj, y, t)
             wpt = obj.updateCurWpt(t);
             
+            %{
             v_req = (obj.waypoints.Data(wpt) - y) / (obj.waypoints.Time(wpt) - t);
             
             if ~obj.firstIter
@@ -42,15 +41,24 @@ classdef ControlSystem < handle
             else
                 v_cur = 0;
             end
+            %}
             
+            err = obj.waypoints.Data(wpt) - y;
+            err_deriv = (err - obj.err_prev)/(t - obj.t_prev);
+            obj.err_accum = obj.err_accum + err*(t - obj.t_prev);
+            
+            obj.err_prev = err;
             obj.y_prev = y;
             obj.t_prev = t;
             
-            err = v_req - v_cur;
-            
-            thrust = obj.gains(1) * err;
+            thrust = obj.gains(1) * err + obj.gains(2)*obj.err_accum + obj.gains(3)*err_deriv;
             
             thrust = max(min(thrust, 1), 0);
+        end
+        
+        function reset(obj)
+            obj.err_prev = 0;
+            obj.err_accum = 0;
         end
     end
 end
