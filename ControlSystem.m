@@ -23,7 +23,7 @@ classdef ControlSystem < handle
             if obj.waypoints.Time(obj.cur_waypoint_idx) <= t
                 cur_waypoint_idx = min(obj.cur_waypoint_idx + 1, numel(obj.waypoints.Time));
                 obj.cur_waypoint_idx = cur_waypoint_idx;
-                obj.reset()
+                %obj.reset() % RESET WORSENS ACCURACY A LOT
             else
                 cur_waypoint_idx = obj.cur_waypoint_idx;
             end
