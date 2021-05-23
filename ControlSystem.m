@@ -47,12 +47,15 @@ classdef ControlSystem < handle
             err_deriv = (err - obj.err_prev)/(t - obj.t_prev);
             obj.err_accum = obj.err_accum + err*(t - obj.t_prev);
             
+            v = (y - obj.y_prev) / (t - obj.t_prev);
             obj.err_prev = err;
             obj.y_prev = y;
             obj.t_prev = t;
             
-            thrust = obj.gains(1) * err + obj.gains(2)*obj.err_accum + obj.gains(3)*err_deriv;
+            %thrust = obj.gains(1) * err + obj.gains(2) * obj.err_accum + obj.gains(3) * err_deriv;
+            K = [1.4010    9.6272];
             
+            thrust = -K*[v; -err];
             thrust = max(min(thrust, 1), 0);
         end
         

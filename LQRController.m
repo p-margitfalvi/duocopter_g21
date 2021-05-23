@@ -1,21 +1,17 @@
-classdef ControlSystem < handle
+classdef LQRController < handle
     properties
-        gains;
+        K;
         waypoints;
         cur_waypoint_idx = 1;
         y_prev = -1;
         t_prev = -1;
-        firstIter = true;
-        
-        i_accum = 0;
-        err_prev = 0;
         
         logs;
     end
     methods
         
-        function obj = ControlSystem(gains, waypoints)
-            obj.gains = gains;
+        function obj = LQRController(K, waypoints)
+            obj.K = K;
             obj.waypoints = waypoints;
         end
         
@@ -23,7 +19,6 @@ classdef ControlSystem < handle
             if obj.waypoints.Time(obj.cur_waypoint_idx) <= t
                 cur_waypoint_idx = min(obj.cur_waypoint_idx + 1, numel(obj.waypoints.Time));
                 obj.cur_waypoint_idx = cur_waypoint_idx;
-                obj.reset()
             else
                 cur_waypoint_idx = obj.cur_waypoint_idx;
             end
@@ -32,30 +27,14 @@ classdef ControlSystem < handle
         function thrust = calculate(obj, y, t)
             wpt = obj.updateCurWpt(t);
             
-            %{
-            v_req = (obj.waypoints.Data(wpt) - y) / (obj.waypoints.Time(wpt) - t);
-            
-            if ~obj.firstIter
-                obj.firstIter = false;
-                v_cur = (y - obj.y_prev)/(t - obj.t_prev); % TODO: Use more points for smoother derivative
-            else
-                v_cur = 0;
-            end
-            %}
+            err = obj.waypoints.Data(wpt) - y;
+            v = (y - obj.y_prev) / (t - obj.t_prev);
             
             obj.y_prev = y;
             obj.t_prev = t;
             
-            err = v_req - v_cur;
-            
-            thrust = obj.gains(1) * err;
-            
+            thrust = -obj.K*[v; -err];
             thrust = max(min(thrust, 1), 0);
-        end
-        
-        function reset(obj)
-            obj.err_prev = 0;
-            obj.i_accum = 0;
         end
     end
 end
