@@ -3,7 +3,7 @@ classdef LQRController < handle
         K;
         waypoints;
         cur_waypoint_idx = 1;
-        y_prev = -1;
+        y_prev = zeros(2, 1);
         t_prev = -1;
         drop_velocity = -2;
         drop_y = 0.1;
@@ -32,7 +32,7 @@ classdef LQRController < handle
             wpt = obj.updateCurWpt(t);
             
             err = obj.waypoints.Data(wpt) - y;
-            v = (y - obj.y_prev) / (t - obj.t_prev);
+            v = (3y - obj.y_prev) / 2*(t - obj.t_prev);
             
             obj.y_prev = y;
             obj.t_prev = t;
