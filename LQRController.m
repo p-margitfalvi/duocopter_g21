@@ -10,11 +10,8 @@ classdef LQRController < handle
         v_est = 0;
         thrust_est = 0;
         
-        drop_velocity = -2;
+        drop_velocity = -3;
         drop_y = 0.1;
-        
-        drop_thrust = 0.4;
-        kalman = CustomKalman([0,-3.69279232872370;1*5e-4,0], [38.8714981970916;0], [0,1], [0, 0; 0, 0], 1E-2^2);
         
         logs;
     end
@@ -59,7 +56,7 @@ classdef LQRController < handle
             
             obj.thrust_est = 0.5*(thrust - obj.thrust_est) + obj.thrust_est;
             thrust = obj.thrust_est;
-            %{
+            
             if obj.waypoints.Data(wpt) < obj.drop_y && y < 0.6 && v < obj.drop_velocity
                 % Reduce velocity so as to not hit too hard
                 % Max drop velocity should be -3
@@ -67,7 +64,6 @@ classdef LQRController < handle
                 v_err = v - obj.drop_velocity;
                 thrust = -v_err;
             end
-            %}
             
             thrust = max(min(thrust, 1), 0);
             obj.thrust_prev = thrust;
